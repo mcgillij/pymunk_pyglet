@@ -33,7 +33,7 @@ class PygApp(pyglet.window.Window):
         shape = pymunk.Circle(body, radius, (0,0))
         self.space.add(body, shape)
         return shape
-    
+
     def draw_ball(self, ball):
         """Draw a ball shape"""
         self.ball_sprite.position = int(ball.body.position.x), int(ball.body.position.y)
@@ -43,22 +43,18 @@ class PygApp(pyglet.window.Window):
         """Add a inverted L shape with two joints"""
         rotation_center_body = pymunk.Body()
         rotation_center_body.position = (300,300)
-        
         rotation_limit_body = pymunk.Body() # 1
         rotation_limit_body.position = (200,300)
-        
         body = pymunk.Body(10, 10000)
         body.position = (300,300)    
         l1 = pymunk.Segment(body, (-150, 0), (255.0, 0.0), 5.0)
         l2 = pymunk.Segment(body, (-150.0, 0), (-150.0, 50.0), 5.0)
-        
         rotation_center_joint = pymunk.PinJoint(body, rotation_center_body, (0,0), (0,0)) 
         joint_limit = 25
         rotation_limit_joint = pymunk.SlideJoint(body, rotation_limit_body, (-100,0), (0,0), 0, joint_limit) # 3
-    
         self.space.add(l1, l2, body, rotation_center_joint, rotation_limit_joint)
         return l1,l2
-    
+
     def draw_lines(self):
         """Draw the lines"""
         for line in self.lines:
@@ -72,6 +68,7 @@ class PygApp(pyglet.window.Window):
             sys.exit()
 
     def main(self):
+        fps = pyglet.clock.ClockDisplay(clock=self.clock)
         while True:
             self.dispatch_events()
             self.ticks_to_next_ball -= 1
@@ -89,6 +86,7 @@ class PygApp(pyglet.window.Window):
                 self.space.remove(ball, ball.body)
                 self.balls.remove(ball)
             self.draw_lines()
+            fps.draw()
             self.space.step(1/50.0)
             self.clock.tick(50)
             self.flip()
