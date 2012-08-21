@@ -13,7 +13,7 @@ class PygApp(pyglet.window.Window):
         template = pyglet.gl.Config(double_buffer=True)
         config = screen.get_best_config(template)
         context = config.create_context(None)
-        super(PygApp, self).__init__(resizable=True, width=800, height=600, caption="Bullets OMG:" , context=context)
+        super(PygApp, self).__init__(resizable=True, width=800, height=600, caption="pymunk test" , context=context)
         self.space = pymunk.Space()
         self.space.gravity = (0.0, -900.0)
         self.ball_sprite = pyglet.sprite.Sprite(pyglet.image.load('bit.png'))
