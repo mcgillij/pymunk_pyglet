@@ -6,7 +6,7 @@ import pymunk
 from pymunk.vec2d import Vec2d
 import world
 import pickle
-
+import level
 def cpfclamp(f, min_, max_):
     """Clamp f between min and max"""
     return min(max(f, min_), max_)
@@ -64,24 +64,57 @@ class Main(pyglet.window.Window):
         elif k == pyglet.window.key.L:
             # loading
             self.load()
-        elif k == pyglet.window.key.SPACE:
-            # dump info
-            dir(self.space)
-            
-                
-        
         
     def on_key_release(self, k, m):
         pass
     
     def save(self):
-        output_file = open('data.pkl', 'wb')
-        pickle.dump(self.space, output_file)
+        lvl = level.Level()
+        
+        for shape in self.space.shapes:
+            if  isinstance(shape, pymunk.Segment):
+                body = shape.body
+                pv1 = body.position + shape.a.rotated(body.angle)
+                pv2 = body.position + shape.b.rotated(body.angle)
+                lvl.segments.append([pv1.x, pv1.y, pv2.x, pv2.y])
+                
+            elif isinstance(shape, pymunk.Poly):
+                ps = shape.get_points()
+                ps = [ps[0]] + ps + [ps[0], ps[0]]
+                xs = []
+                for p in ps:
+                    xs.append(p.x)
+                    xs.append(p.y)
+                lvl.polys.append([xs])
+                                      
+            elif isinstance(shape, pymunk.Circle):
+                p = shape.body.position
+                ps = [p + (0,shape.radius), p + (shape.radius,0),
+                        p + (0,-shape.radius), p + (-shape.radius,0)]
+                ps += [ps[0]]
+                xs = []
+                for p in ps:
+                    xs.append(p.x)
+                    xs.append(p.y)
+                lvl.circles.append([xs])
+                
+        output_file = open('level.pkl', 'wb')
+        pickle.dump(lvl, output_file)
         output_file.close()
         
     def load(self):
-        input_file = open('data.pkl', 'rb')
-        self.space = pickle.load(input_file)
+        input_file = open('level.pkl', 'rb')
+        lvl = pickle.load(input_file)
+        self.space = pymunk.Space()
+        self.space.gravity = 0, -1000
+        segments = []
+        for seg in lvl.segments:
+            s = pymunk.Segment(self.space.static_body, (seg[0], seg[1]), (seg[2], seg[3]), 5)
+            s.friction = 1.
+            s.group = 1
+            segments.append(s)
+        self.space.add(segments)
+        
         input_file.close()
     
     def draw_lines(self):
