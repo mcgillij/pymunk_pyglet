@@ -96,9 +96,9 @@ class Main(pyglet.window.Window):
                 body = shape.body
                 pv1 = body.position + shape.a.rotated(body.angle)
                 pv2 = body.position + shape.b.rotated(body.angle)
-                pyglet.graphics.draw(2, GL_LINES,
-                                     ('v2f', (pv1.x, pv1.y, pv2.x, pv2.y)),
-                                      ('c4f', (1.0, 1.0, 1.0, 1.) * 2))
+                self.batch.add(2, GL_LINES, None, 
+                ('v2f', (pv1.x, pv1.y, pv2.x, pv2.y)),
+                ('c4f', (1.0, 1.0, 1.0, 1.) * 2))
             elif isinstance(shape, pymunk.Poly):
                 ps = shape.get_points()
                 ps = [ps[0]] + ps + [ps[0], ps[0]]
