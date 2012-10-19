@@ -4,6 +4,7 @@ import pyglet
 from pyglet.gl import *
 import pymunk
 from pymunk.vec2d import Vec2d
+import world
 
 def cpfclamp(f, min_, max_):
     """Clamp f between min and max"""
@@ -43,63 +44,13 @@ class Main(pyglet.window.Window):
         self.kb_handler = pyglet.window.key.KeyStateHandler()
         super(Main, self).__init__(resizable=True, width=WIDTH, height=HEIGHT, caption="pymunk test" , context=context)
         self.push_handlers(self.kb_handler)
-        self.space = pymunk.Space()   
-        self.space.gravity = 0, -1000
         self.batch = pyglet.graphics.Batch()
         self.direction = 1
         self.remaining_jumps = 2
         self.landing = {'p':Vec2d.zero(), 'n':0}
         self.landed_previous = False
         # box walls 
-        self.static = [
-            pymunk.Segment(self.space.static_body, (10, 50), (300, 50), 5)
-            , pymunk.Segment(self.space.static_body, (300, 50), (325, 50), 5)
-            , pymunk.Segment(self.space.static_body, (325, 50), (350, 50), 5)
-            , pymunk.Segment(self.space.static_body, (350, 50), (375, 50), 5)
-            , pymunk.Segment(self.space.static_body, (375, 50), (680, 50), 5)
-            , pymunk.Segment(self.space.static_body, (680, 50), (680, 370), 5)
-            , pymunk.Segment(self.space.static_body, (680, 370), (10, 370), 5)
-            , pymunk.Segment(self.space.static_body, (10, 370), (10, 50), 5)
-                    ]  
-        # rounded shape
-        self.rounded = [
-                pymunk.Segment(self.space.static_body, (500, 50), (520, 60), 5)
-            , pymunk.Segment(self.space.static_body, (520, 60), (540, 80), 5)
-            , pymunk.Segment(self.space.static_body, (540, 80), (550, 100), 5)
-            , pymunk.Segment(self.space.static_body, (550, 100), (550, 150), 5)
-                    ]
-                    
-        # static platforms
-        self.platforms = [
-                  pymunk.Segment(self.space.static_body, (170, 50), (270, 150), 5)
-            #, pymunk.Segment(space.static_body, (270, 100), (300, 100), 5)
-            , pymunk.Segment(self.space.static_body, (400, 150), (450, 150), 5)
-            , pymunk.Segment(self.space.static_body, (400, 200), (450, 200), 5)
-            , pymunk.Segment(self.space.static_body, (220, 200), (300, 200), 5)
-            , pymunk.Segment(self.space.static_body, (50, 250), (200, 250), 5)
-            , pymunk.Segment(self.space.static_body, (10, 370), (50, 250), 5)
-                    ]
-        for s in self.static + self.platforms + self.rounded:
-            s.friction = 1.
-            s.group = 1
-        self.space.add(self.static, self.platforms + self.rounded)
-        
-        # moving platform
-        self.platform_path = [(650,100),(600,200),(650,300)]
-        self.platform_path_index = 0
-        self.platform_body = pymunk.Body(pymunk.inf, pymunk.inf)
-        self.platform_body.position = 650,100
-        s = pymunk.Segment(self.platform_body, (-25, 0), (25, 0), 5)
-        s.friction = 1.
-        s.group = 1
-        self.space.add(s)
-        
-        # pass through platform
-        passthrough = pymunk.Segment(self.space.static_body, (270, 100), (320, 100), 5)
-        passthrough.friction = 1.
-        passthrough.collision_type = 2
-        passthrough.layers = passthrough.layers ^ 0b1000
-        self.space.add(passthrough)
+        self.space = world.World()
         
         def passthrough_handler(space, arbiter):
             if arbiter.shapes[0].body.velocity.y < 0:
@@ -225,18 +176,18 @@ class Main(pyglet.window.Window):
         self.body.velocity.y = max(self.body.velocity.y, -FALL_VELOCITY) # clamp upwards as well?
         
         # Move the moving platform
-        destination = self.platform_path[self.platform_path_index]
-        current = Vec2d(self.platform_body.position)
+        destination = self.space.platform_path[self.space.platform_path_index]
+        current = Vec2d(self.space.platform_body.position)
         distance = current.get_distance(destination)
         if distance < PLATFORM_SPEED:
-            self.platform_path_index += 1
-            self.platform_path_index = self.platform_path_index % len(self.platform_path)
+            self.space.platform_path_index += 1
+            self.space.platform_path_index = self.space.platform_path_index % len(self.space.platform_path)
             t = 1
         else:
             t = PLATFORM_SPEED / distance
         new = current.interpolate_to(destination, t)
-        self.platform_body.position = new
-        self.platform_body.velocity = (new - current) / DT
+        self.space.platform_body.position = new
+        self.space.platform_body.velocity = (new - current) / DT
             
         # Did we land?
         if abs(grounding['impulse'].y) / self.body.mass > 200 and not self.landed_previous:
