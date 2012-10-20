@@ -51,6 +51,7 @@ class Main(pyglet.window.Window):
         self.landed_previous = False
         # box walls 
         self.space = world.World()
+        self.space.load()
         
         def passthrough_handler(space, arbiter):
             if arbiter.shapes[0].body.velocity.y < 0:
