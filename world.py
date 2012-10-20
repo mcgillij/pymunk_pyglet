@@ -24,6 +24,7 @@ class World(pymunk.Space):
         self.add(passthrough)
         
     def save(self):
+        print "saving level"
         lvl = level.Level()
         for shape in self.shapes:
             if  isinstance(shape, pymunk.Segment):
@@ -57,6 +58,7 @@ class World(pymunk.Space):
         output_file.close()
         
     def load(self):
+        print "loading level"
         input_file = open('level.pkl', 'rb')
         lvl = pickle.load(input_file)
         segments = []
